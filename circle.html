@@ -49,7 +49,7 @@
 	
 	<script src="jquery-1.8.3.min.js"></script>
 	
-    <script src="tool.js"></script> <!-- ok! -->
+	<script src="tool.js"></script> <!-- ok! -->
 	<script src="game.js"></script>
 	<script src="fullscreen.js"></script> <!-- ok! -->
 	<script src="display.js"></script> <!-- ok! -->
@@ -60,15 +60,16 @@
     <script>
 	$(function() {
 		
-		var display = new Display(document.getElementById('display'));
-		display.resolution(1440, 900);
-		
+		var game = new Game(document.getElementById('display'));
+		game.timer.fps = 64;
+
+		var display = game.display;
+		var mouse = game.mouse;
+		var keyboard = game.keyboard;
+
 		var viewport = display.viewport;
 		var canvas = display.canvas;
 		var context = display.context;
-	
-		var mouse = new Mouse(display.display);
-		var keyboard = new Keyboard(display.display);
 		
 		// circle position
 		var x = canvas.width / 2;
@@ -83,51 +84,56 @@
 		// arrow key keycodes
 		var LEFT = 37, RIGHT = 39, UP = 38, DOWN = 40, SPACE = 32, ENTER = 13;
 		
-		var timer = new Timer();
 		var pause = false;
+
+		var delta_summed = 0;
+		var fps_counter = 0;
+		var fps = 0;
 		
-		var render = function(delta) {
-			display.resize(); // fix window dimensions
-			
-			var fullscreen = Fullscreen.enabled();
-		
+		game.logic = function(delta) {
+			// fps
+			fps_counter++;
+			delta_summed += delta;
+			if(delta_summed >= 1000) {
+				delta_summed -= 1000;
+				fps = fps_counter;
+				fps_counter = 0;
+			}
+
 			if (keyboard.pressed(SPACE) || keyboard.pressed(ENTER)) {
 				pause = !pause;
 			}
 			
-			// update logic
-			if (!pause) {
-				
-				kx = .6 * (keyboard.down(RIGHT) - keyboard.down(LEFT));
-				ky = .6 * (keyboard.down(DOWN) - keyboard.down(UP));
-				
-				x += delta * (kx + vx);
-				y += delta * (ky + vy);
+			if(pause) { return; }
+
+			kx = .6 * (keyboard.down(RIGHT) - keyboard.down(LEFT));
+			ky = .6 * (keyboard.down(DOWN) - keyboard.down(UP));
 			
-				// viewport is centered in display, subtract half the difference in width
-				var ox = (display.display.offsetWidth - viewport.offsetWidth)/2;
-				var oy = 0; //(display.display.offsetHeight - viewport.offsetHeight)/2; // doesn't get centered vertically yet
-				// transform mouse position to canvas coordinates
-				mx = (mouse.x - ox)*canvas.width/canvas.offsetWidth;
-				my = (mouse.y - oy)*canvas.height/canvas.offsetHeight;
-				
-				var dx = mx - x;
-				var dy = my - y;
-				angle = Math.atan2(dy, dx); //don't ask me
-				// normalized
-				var nx = Math.cos(angle);
-				var ny = Math.sin(angle);
-				// accelerate
-				if(Math.abs(dx) > 4) { vx += 0.04 * nx; }
-				if(Math.abs(dy) > 4) { vy += 0.04 * ny; }
-				// damping
-				vx *= 0.95;
-				vy *= 0.95;
-			}
+			x += delta * (kx + vx);
+			y += delta * (ky + vy);
+		
+			// viewport is centered in display, subtract half the difference in width
+			var ox = display.canvas.offsetLeft - display.display.offsetLeft;
+			var oy = display.canvas.offsetTop - display.display.offsetTop;
+			// transform mouse position to canvas coordinates
+			mx = (mouse.x - ox)*canvas.width/canvas.offsetWidth;
+			my = (mouse.y - oy)*canvas.height/canvas.offsetHeight;
 			
-			// clear canvas
-			context.clearRect(0, 0, canvas.width, canvas.height);
+			var dx = mx - x;
+			var dy = my - y;
+			angle = Math.atan2(dy, dx); //don't ask me
+			// normalized
+			var nx = Math.cos(angle);
+			var ny = Math.sin(angle);
+			// accelerate
+			if(Math.abs(dx) > 4) { vx += 0.04 * nx; }
+			if(Math.abs(dy) > 4) { vy += 0.04 * ny; }
+			// damping
+			vx *= 0.95;
+			vy *= 0.95;
+		}
 			
+		game.render = function() {
 			// draw circle
 			context.beginPath();
 			context.arc(x, y, radius, 0, 2*Math.PI, false);
@@ -146,14 +152,11 @@
 			context.font = '18pt Calibri';
 			context.fillStyle = 'black';
 			context.fillText('Mouse (' + Math.round(mx) + ', ' + Math.round(my)  + ')', 10, 20);
-			
-			// Must be placed down here
-			keyboard.done(); // update keyboard input state
+			context.fillText('Fps (' + Math.round(fps) + ')', 10, 50);
 		};
 		
-		timer.callback = render;
-		timer.start();
-		
+		game.start();
+
 		$(display.display).click(function() {
 			display.fullscreen();
 		});
