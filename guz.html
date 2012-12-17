@@ -1,0 +1,110 @@
+
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <style>
+      body {
+        margin: 0px;
+        padding: 0px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+    <script src="kinetic-v4.1.2.min.js"></script>
+	<script src="Game.js"></script>
+    <script>
+      var stage = new Kinetic.Stage({
+        container: 'container',
+        width: 800,
+        height: 600
+      });
+      var layer = new Kinetic.Layer();
+
+      var imageObj = new Image();
+	  var sounds = {};
+	  sounds['walk'] = new Audio("./audition/walk.wav"); // buffers automatically when created
+
+	  var images = {};
+	  
+      imageObj.onload = function() {
+
+		images = {
+			'bomb': new Kinetic.Image({
+				x: 140,
+				y: stage.getHeight() / 2 - 59,
+				image: imageObj,
+				crop: {
+					x: 0,
+					y: 0,
+					width: 64,
+					height: 64,
+				},
+				width: 64,
+				height: 64
+			}),
+			'guz': new Kinetic.Image({
+				x: 300,
+				y: stage.getHeight() / 2 - 59,
+				image: imageObj,
+				crop: {
+					x: 64,
+					y: 0,
+					width: 128,
+					height: 64,
+				}, 
+				width: 128,
+				height: 64
+			}),
+			'body': new Kinetic.Image({
+				x: 0,
+				y: 0,
+				image: imageObj,
+				crop: {
+					x: 128,
+					y: 192,
+					width: 64,
+					height: 64,
+				}, 
+				width: 64,
+				height: 64
+			}),
+			'head': new Kinetic.Image({
+				x: 500,
+				y: 500,
+				image: imageObj,
+				crop: {
+					x: 128,
+					y: 128,
+					width: 64,
+					height: 64,
+				}, 
+				width: 64,
+				height: 64
+			})
+		};
+
+        // add the shape to the layer
+        layer.add(images['bomb']);
+        layer.add(images['guz']);
+		layer.add(images['body']);
+		layer.add(images['head']);
+
+		images['bomb'].on("mouseover", function() {
+          document.body.style.cursor = "pointer";
+		  sounds['walk'].play();
+        });
+		
+		images['bomb'].on("mouseout", function() {
+          document.body.style.cursor = "default";
+        });
+
+        // add the layer to the stage
+        stage.add(layer);
+
+      };
+      imageObj.src = './guz.png';
+
+    </script>
+  </body>
+</html>

@@ -1,0 +1,164 @@
+
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <style>
+	html, body, div, canvas { margin:0; padding:0; }
+	html, body { width: 100%; height: 100%; }
+	
+	body { background: #ddd; }
+	
+	#main, header, footer{
+		width: 700px;
+		margin: 0 auto;
+	}
+	
+	#display {
+		background: black;
+		width: 100%;
+		height: 100%;
+	}
+	
+	.display .viewport {
+		background: red;
+		overflow: hidden;
+		margin: 0 auto;
+	}
+	
+	.display .viewport canvas {
+		outline: none;
+		background: white;
+		width: 100%;
+		height: 100%;
+	}
+    </style>
+  </head>
+  <body>
+	<header>
+		<h1>My awesome game site</h1>
+	</header>
+	<div id="main">
+		<h1>This is my first game</h1>
+		<p>Click on the display to toggle fullscreen</p>
+		<p>Space and Enter pause/resume the game</p>
+		<div id="display" class="display"></div>
+	</div>
+	<footer>
+		<h6>By Mick van Gelderen</h6>
+	</footer>
+	
+	<script src="jquery-1.8.3.min.js"></script>
+	
+    <script src="tool.js"></script> <!-- ok! -->
+	<script src="game.js"></script>
+	<script src="fullscreen.js"></script> <!-- ok! -->
+	<script src="display.js"></script> <!-- ok! -->
+	<script src="timer.js"></script> <!-- ok! -->
+	<script src="keyboard.js"></script> <!-- ok! -->
+	<script src="mouse.js"></script> <!-- ok! -->
+	
+    <script>
+	$(function() {
+		
+		var display = new Display(document.getElementById('display'));
+		display.resolution(1440, 900);
+		
+		var viewport = display.viewport;
+		var canvas = display.canvas;
+		var context = display.context;
+	
+		var mouse = new Mouse(display.display);
+		var keyboard = new Keyboard(display.display);
+		
+		// circle position
+		var x = canvas.width / 2;
+		var y = canvas.height / 2;
+		var vx = 0;
+		var vy = 0;
+		var mx = x;
+		var my = y;
+		var angle = 0;
+		var radius = 70;
+		
+		// arrow key keycodes
+		var LEFT = 37, RIGHT = 39, UP = 38, DOWN = 40, SPACE = 32, ENTER = 13;
+		
+		var timer = new Timer();
+		var pause = false;
+		
+		var render = function(delta) {
+			display.resize(); // fix window dimensions
+			
+			var fullscreen = Fullscreen.enabled();
+		
+			if (keyboard.pressed(SPACE) || keyboard.pressed(ENTER)) {
+				pause = !pause;
+			}
+			
+			// update logic
+			if (!pause) {
+				
+				kx = .6 * (keyboard.down(RIGHT) - keyboard.down(LEFT));
+				ky = .6 * (keyboard.down(DOWN) - keyboard.down(UP));
+				
+				x += delta * (kx + vx);
+				y += delta * (ky + vy);
+			
+				// viewport is centered in display, subtract half the difference in width
+				var ox = (display.display.offsetWidth - viewport.offsetWidth)/2;
+				var oy = 0; //(display.display.offsetHeight - viewport.offsetHeight)/2; // doesn't get centered vertically yet
+				// transform mouse position to canvas coordinates
+				mx = (mouse.x - ox)*canvas.width/canvas.offsetWidth;
+				my = (mouse.y - oy)*canvas.height/canvas.offsetHeight;
+				
+				var dx = mx - x;
+				var dy = my - y;
+				angle = Math.atan2(dy, dx); //don't ask me
+				// normalized
+				var nx = Math.cos(angle);
+				var ny = Math.sin(angle);
+				// accelerate
+				if(Math.abs(dx) > 4) { vx += 0.04 * nx; }
+				if(Math.abs(dy) > 4) { vy += 0.04 * ny; }
+				// damping
+				vx *= 0.95;
+				vy *= 0.95;
+			}
+			
+			// clear canvas
+			context.clearRect(0, 0, canvas.width, canvas.height);
+			
+			// draw circle
+			context.beginPath();
+			context.arc(x, y, radius, 0, 2*Math.PI, false);
+			context.fillStyle = 'green';
+			context.fill();
+			context.lineWidth = 5;
+			context.strokeStyle = '#003300';
+			context.stroke();
+			
+			// draw angle
+			context.beginPath();
+			context.moveTo(x, y);
+			context.lineTo(x + Math.cos(angle) * 80, y + Math.sin(angle) * 80);
+			context.stroke();
+
+			context.font = '18pt Calibri';
+			context.fillStyle = 'black';
+			context.fillText('Mouse (' + Math.round(mx) + ', ' + Math.round(my)  + ')', 10, 20);
+			
+			// Must be placed down here
+			keyboard.done(); // update keyboard input state
+		};
+		
+		timer.callback = render;
+		timer.start();
+		
+		$(display.display).click(function() {
+			display.fullscreen();
+		});
+		
+	});
+	</script>
+  </body>
+</html>

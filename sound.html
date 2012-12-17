@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<style>
+			body {
+				margin: 0px;
+				padding: 0px;
+			}
+			#container {
+				width: 600px;
+				margin: 0 auto;
+			}
+			#progress {
+				width: 600px;
+				height: 80px;
+				margin: 40px auto;
+				background: gray;
+			}
+			#progress p {
+				width: 0px;
+				height: 40px;
+				margin: 20px 0;
+				padding: 0;
+				display: inline-block;
+				background: green;
+				text-align: center;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="progress"><p></p></div>
+		<div id="container">
+			<p>Click to continue playing the sound</p>
+			<p>This is an audio context experiment. I couldn't find a supported way
+				to start and pause a looping sound effect. That's why I tried to come
+				up with something that supported this.
+			</p>
+			<p>My solution is to have two sound sources, one that plays the remaining 
+				part of a loop and another one that starts looping after the remaining 
+				part has been played. This is required because audio context doesn't allow
+				to set a loop start and end yet in chrome as of now. I believe it is in the
+				specifications for future versions now. 
+			</p>
+			<p>The position in the sound effect is found by context.currentTime. Recording the
+				starting time and pause time gives a difference. This diference is added to the
+				accumulated offset. The offset is then wrapped by the sound effects' length. 
+			</p>
+		</div>
+		<script src="kinetic-v4.1.2.min.js"></script>
+		<script src="jquery-1.8.3.min.js"></script>
+		<script src="sound.js"></script>
+		<script>
+			Sound.initialize();
+			  
+			var loop;
+			var effect;
+			var suck;
+			
+			Sound.load('1234', 'file:///C:/Users/mick/Documents/guz/audition/1234.wav', function() {
+				loop = new Sound.Loop('1234');
+			});
+
+			Sound.load('down', 'file:///C:/Users/mick/Documents/guz/audition/down.wav', function() {
+				effect = new Sound.Effect('down');
+			});
+
+			Sound.load('up', 'file:///C:/Users/mick/Documents/guz/audition/up.wav', function() {
+				suck = new Sound.Effect('up');
+			});
+			
+			document.addEventListener('mousedown', function() {
+				if (loop) { loop.play(); }
+				if (effect) { effect.play(); }
+			});
+			
+			document.addEventListener('mouseup', function() {
+				if (loop) { loop.pause(); }
+				if (suck) { suck.play(); }
+			});
+			
+			setInterval(function() {
+				if (loop && loop.sr) {
+					// calculate the progress since starting the loop using context.currentTime
+					var progress = loop.offset + Sound.context.currentTime - loop.start; 
+					while(progress > loop.duration) { progress -= loop.duration; } // wrap
+					var ratio = progress/loop.duration;
+					$('#progress').children('p').width(ratio * 600).text(Math.round(ratio * 100) + '%');
+				}
+			}, 10);
+		</script>
+	</body>
+</html>
