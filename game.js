@@ -26,6 +26,8 @@ var Game = function(element) {
 		self.display.context.clearRect(0, 0, self.display.canvas.width, self.display.canvas.height);
 		self.render();
 	});
+	this.mouse.relative = this.display.canvas; // make mouse coordinates relative to canvas while still being
+																						 // registered in the full display
 	this.display.resolution(1440, 900);
 };
 var p = Game.prototype;

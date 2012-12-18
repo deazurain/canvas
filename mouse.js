@@ -4,6 +4,7 @@
 Mouse is a class coordinates relative to the element provided in the
 constructor. 
 	readwrite:
+		relative									Element that the coordinates are calculated relatively to
 	readonly:
 		x
 		y
@@ -16,19 +17,17 @@ var Mouse = function(element) {
 	var self = this;
 
 	this.element = element;
+	this.relative = element;
 	this.x = 0;
 	this.y = 0;
 	this._mousemove = function(e) {
-		ox = element.offsetLeft;
-		oy = element.offsetTop;
-		
-		//subtract the offset of the fullscreen element
+		var ox = self.relative.offsetLeft;
+		var oy = self.relative.offsetTop;
 		if (Fullscreen.enabled()) {
 			var f = Fullscreen.element();
 			ox -= f.offsetLeft;
 			oy -= f.offsetTop;
 		}
-		
 		self.x = e.pageX - ox;
 		self.y = e.pageY - oy;
 	};

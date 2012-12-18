@@ -112,12 +112,9 @@
 			x += delta * (kx + vx);
 			y += delta * (ky + vy);
 		
-			// viewport is centered in display, subtract half the difference in width
-			var ox = display.canvas.offsetLeft - display.display.offsetLeft;
-			var oy = display.canvas.offsetTop - display.display.offsetTop;
 			// transform mouse position to canvas coordinates
-			mx = (mouse.x - ox)*canvas.width/canvas.offsetWidth;
-			my = (mouse.y - oy)*canvas.height/canvas.offsetHeight;
+			mx = (mouse.x)*canvas.width/canvas.offsetWidth;
+			my = (mouse.y)*canvas.height/canvas.offsetHeight;
 			
 			var dx = mx - x;
 			var dy = my - y;
@@ -152,7 +149,9 @@
 			context.font = '18pt Calibri';
 			context.fillStyle = 'black';
 			context.fillText('Mouse (' + Math.round(mx) + ', ' + Math.round(my)  + ')', 10, 20);
-			context.fillText('Fps (' + Math.round(fps) + ')', 10, 50);
+			context.fillText('MouseE(' + Math.round(mouse.ex) + ', ' + Math.round(mouse.ey) + '), Disp(' + display.display.offsetLeft + ', ' + display.display.offsetTop + ')', 10, 50);
+			context.fillText('MouseA(' + Math.round(mouse.ax) + ', ' + Math.round(mouse.ay) + '), Canv(' + display.canvas.offsetLeft + ', ' + display.canvas.offsetTop + ')', 10, 80);
+			context.fillText('Fps (' + Math.round(fps) + ')', 10, 110);
 		};
 		
 		game.start();
